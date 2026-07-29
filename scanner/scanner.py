@@ -56,7 +56,9 @@ def set_last_id(channel, last_id):
                    json={"channel": channel, "last_id": last_id}, timeout=30)
 
 
-def message_matches(msg, keywords):
+def message_matches(msg, keywords, special=False):
+    if special:
+        return True
     if not keywords:
         return False
     text = (msg.message or "") + " " + (getattr(msg, "raw_text", "") or "")
@@ -86,6 +88,7 @@ def main():
                 continue
 
             keywords = ch_conf.get("keywords") or global_keywords
+            is_special = bool(ch_conf.get("special"))
             last_id = get_last_id(channel_username)
 
             try:
@@ -110,7 +113,7 @@ def main():
                 if msg.id > max_id_seen:
                     max_id_seen = msg.id
 
-                if not message_matches(msg, keywords):
+                if not message_matches(msg, keywords, special=is_special):
                     continue
 
                 try:
@@ -139,4 +142,4 @@ def main():
 
 if __name__ == "__main__":
     main()
- 
+         
