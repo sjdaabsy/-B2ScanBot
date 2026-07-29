@@ -1,40 +1,34 @@
-"""
-================================================================
- اسکنر کانال‌ها - اجرا می‌شه توسط GitHub Actions (هر چند دقیقه)
-================================================================
-این اسکریپت:
-  1. تنظیمات (لیست کانال‌ها، کلمات فیلتر) رو از Cloudflare Worker می‌گیره
-  2. با اکانت تلگرام خودت (MTProto) هر کانال عمومی رو بدون نیاز به
-     عضویت چک می‌کنه (دقیقاً مثل پیش‌نمایش کانال قبل از Join)
-  3. اگه کپشن/متن پست شامل یکی از کلمات فیلتر بود، پست رو به
-     کانال شخصی مقصد فوروارد می‌کنه
-  4. آخرین آیدی پیام هر کانال رو دوباره توی Worker ذخیره می‌کنه
-     تا دفعه‌ی بعد از همون‌جا ادامه بده (پست تکراری نیاد)
+name: Channel Scanner
 
-ENV های لازم (به‌صورت GitHub Secrets تنظیم می‌شن):
-  API_ID          -> از my.telegram.org
-  API_HASH        -> از my.telegram.org
-  SESSION_STRING  -> با اسکریپت generate_session.py ساخته می‌شه
-  DEST_CHANNEL    -> یوزرنیم یا آیدی کانال شخصی مقصد (مثلاً @mychannel)
-  WORKER_URL      -> آدرس Worker (مثلاً https://xxx.workers.dev)
-  API_SECRET      -> همون رمزی که توی Worker تنظیم کردی
-================================================================
-"""
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
 
-import os
-import requests
-from telethon.sync import TelegramClient
-from telethon.errors import ChatForwardsRestrictedError, FloodWaitError
-from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-API_ID = int(os.environ["API_ID"])
-API_HASH = os.environ["API_HASH"]
-SESSION_STRING = os.environ["SESSION_STRING"]
-DEST_CHANNEL = os.environ["DEST_CHANNEL"]
-WORKER_URL = os.environ["WORKER_URL"].rstrip("/")
-API_SECRET = os.environ["API_SECRET"]
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-HEADERS = {"X-API-Key": API_SECRET}
+      - name: Install dependencies
+        run: pip install -r scanner/requirements.txt
+
+      - name: Run scanner
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          DEST_CHANNEL: ${{ secrets.DEST_CHANNEL }}
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          API_SECRET: ${{ secrets.API_SECRET }}
+        run: python scanner/scanner.pyHEADERS = {"X-API-Key": API_SECRET}
 
 
 def get_config():
