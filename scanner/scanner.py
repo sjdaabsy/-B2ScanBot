@@ -24,6 +24,7 @@ ENV های لازم (به‌صورت GitHub Secrets تنظیم می‌شن):
 import os
 import requests
 from telethon.sync import TelegramClient
+from telethon.sessions import StringSession
 from telethon.errors import ChatForwardsRestrictedError, FloodWaitError
 from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument
 
@@ -76,7 +77,7 @@ def main():
     now_ms = time.time() * 1000
 
     with TelegramClient(
-        session=SESSION_STRING, api_id=API_ID, api_hash=API_HASH
+        session=StringSession(SESSION_STRING), api_id=API_ID, api_hash=API_HASH
     ) as client:
         for channel_username, ch_conf in channels.items():
             muted_until = ch_conf.get("muted_until")
@@ -138,4 +139,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+ 
